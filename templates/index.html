@@ -16,15 +16,20 @@
 
 <body>
 
-    <form>
+    <form method="POST">
         <input type="text" placeholder="Enter the latitude and longitude of your city">
         <input type="text" placeholder="Enter the registration of the aircraft">
+        <input type="text" placeholder="Enter your phone number">
+
+        <select id="cities">
+            <option value="Vadodara">Vadodara</option>
+            <option value="Ahmedabad">Ahmedabad</option>
+        </select>
 
 
 
-        <button type="submit"> Track
-
-        </button>
+        <button type="submit">Add Alert </button>
+        {{task_status}}
     </form>
 
 </body>

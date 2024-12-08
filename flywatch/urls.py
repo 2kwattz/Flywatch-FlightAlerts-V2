@@ -17,8 +17,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from flywatch import views
+from django.urls import path
+from . import consumers
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.index)
+    path('', views.index),
+    # path('ws/esp8266/', consumers.Esp8266Consumer.as_asgi()),  # This is where ESP8266 connects
 ]
