@@ -9,14 +9,35 @@ from twilio.twiml.voice_response import VoiceResponse
 import time
 from celery import shared_task
 from celery.result import AsyncResult
-import time
 import threading
 from channels.layers import get_channel_layer
+import json
+from threading import Lock
+import asyncio
+import websockets
+
 
 account_sid = ''
 auth_token = ''
 client = Client(account_sid, auth_token)
 task_status = {"status": "Not Started", "result": None}
+
+shared_dict = {
+    'VUAUA': False,
+    'VUAUB': False,
+    'VUAUC': False,
+    'VUAUD': False,
+    'VUAUE': False,
+    'VUAUF': False,
+    'VUAUG': False,
+    'VUAUH': False,
+    'VUAUI': False,
+    'VUAUJ': False,
+    'VUAUK': False
+}
+
+lock = Lock()
+
 
 # C17 Registrations
 
@@ -68,7 +89,7 @@ def perform_check():
             page.goto(f"https://www.radarbox.com/data/flights/{regs}")
             page.wait_for_load_state('load')
             time.sleep(2)
-
+            
             try:
                 target_lat_str = page.locator('div#title:has-text("Latitude")').locator(
                     'xpath=following-sibling::div[@id="value"]').text_content().strip()
@@ -95,9 +116,21 @@ def perform_check():
                         from_="+17756187371",
                         twiml=str(response)
                     )
+                    
+                    with lock:
+                        print("Updating dictionary...")
+                        shared_dict[regs] = True
+
+                        print("Values in shared dict", shared_dict)
                 else:
                     print(f"\n{regs} is NOT within 100 miles of Vadodara.")
                     print(f"C17 {regs} LAT LONG {target_lat} {target_lon} . Vadodara's LAT LONG {city_lat} {city_lon}")
+
+                    with lock:
+                        print("Updating dictionary...")
+                        shared_dict[regs] = False
+
+                        print("Values in shared dict", shared_dict)
 
             except Exception as e:
                 print(f"Error with processing aircraft {regs}: {e}")
