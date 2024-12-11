@@ -89,35 +89,35 @@ def is_within_radius(lat1, lon1, lat2, lon2, radius=200):
         return False  # The location is outside the radius
 
 
-# def fetch_proxy():
-#     with sync_playwright() as p:
-#         # Launch browser (headless=True or False, depending on your needs)
-#         browser = p.chromium.launch(headless=False)
-#         page = browser.new_page()
+def fetch_proxy():
+    with sync_playwright() as p:
+        # Launch browser (headless=True or False, depending on your needs)
+        browser = p.chromium.launch(headless=False)
+        page = browser.new_page()
 
-#         # Fetch the proxy data by sending an HTTP GET request
-#         response = page.request.get('https://gimmeproxy.com/api/getProxy')
+        # Fetch the proxy data by sending an HTTP GET request
+        response = page.request.get('https://gimmeproxy.com/api/getProxy')
         
-#         # Ensure the request was successful
-#         if response.status != 200:
-#             print("Failed to get proxy data.")
-#             return None
+        # Ensure the request was successful
+        if response.status != 200:
+            print("Failed to get proxy data.")
+            return None
 
-#         # Parse the JSON response
-#         proxy_data = response.json()
+        # Parse the JSON response
+        proxy_data = response.json()
 
-#         # Extract IP and Port from the response JSON
-#         proxy_ip = proxy_data.get('ip')
-#         proxy_port = proxy_data.get('port')
+        # Extract IP and Port from the response JSON
+        proxy_ip = proxy_data.get('ip')
+        proxy_port = proxy_data.get('port')
 
 
-#         if proxy_ip and proxy_port:
-#             return f"http://{proxy_ip}:{proxy_port}"
-#         else:
-#             print("Proxy data is incomplete.")
-#             browser.close()
-        
-#         return None
+        if proxy_ip and proxy_port:
+            browser.close()
+            return f"http://{proxy_ip}:{proxy_port}"
+        else:
+            print("Proxy data is incomplete.")
+            browser.close()
+      
             
 
 
@@ -125,9 +125,9 @@ def perform_check():
     city_lat = 22.310696
     city_lon = 73.192635
 
-    # proxy_url = fetch_proxy()
-    # if proxy_url:
-    #     print(f"Using Proxy: {proxy_url}")
+    proxy_url = fetch_proxy()
+    if proxy_url:
+        print(f"Using Proxy: {proxy_url}")
 
     # Delhi
     # city_lat = 28.644800
@@ -138,7 +138,9 @@ def perform_check():
             '--no-sandbox',  # Avoid sandboxing in headless mode
             '--enable-accelerated-video-decode',  # Enable video decoding for h264
             '--disable-blink-features=AutomationControlled'
-        ],timeout=60000)
+        ],
+        proxy={"server": proxy_url},
+        timeout=60000)
 
 
     #     browser = p.chromium.launch(headless=False,  args=[
