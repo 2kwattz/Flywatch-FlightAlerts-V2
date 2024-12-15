@@ -51,8 +51,9 @@ shared_dict = {
     'VUAUK': False
 }
 
-data_lock = Lock()
+logs_data = {}
 
+data_lock = Lock()
 
 # C17 Registrations
 
@@ -61,6 +62,9 @@ Regs = ['VUAUA','VUAUB','VUAUC','VUAUD','VUAUE','VUAUF','VUAUG','VUAUH','VUAUI',
 
 def trackStatus(request):
     return JsonResponse(shared_dict)
+
+def trackLogs(request):
+    return JsonResponse(logs_data)
 
 # Radius of the Earth in miles
 R = 3959
@@ -91,7 +95,6 @@ def is_within_radius(lat1, lon1, lat2, lon2, radius=200):
         return True  # The location is within the radius
     else:
         return False  # The location is outside the radius
-
 
 # def fetch_proxy():
 #     with sync_playwright() as p:
@@ -133,7 +136,7 @@ def perform_check():
 
     # proxy_url = fetch_proxy()
     # if proxy_url:
-        # print(f"Using Proxy: {proxy_url}")
+    #     print(f"Using Proxy: {proxy_url}")
 
     # Delhi (for testing)
     # city_lat = 28.644800
@@ -142,16 +145,16 @@ def perform_check():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=False,  
         # args=[
-            # '--no-sandbox',  # Avoid sandboxing in headless mode
-            # '--enable-accelerated-video-decode',  # Enable video decoding for h264
-            # '--disable-blink-features=AutomationControlled'
+        #     '--no-sandbox',  # Avoid sandboxing in headless mode
+        #     '--enable-accelerated-video-decode',  # Enable video decoding for h264
+        #     '--disable-blink-features=AutomationControlled'
         # ],
         # proxy={"server": proxy_url},
-        timeout=120000)
+        timeout=2100000)
 
-       
-
-
+        # context = browser.new_context(
+        # proxy={"server": proxy_url}  # Specify proxy details if needed
+        #    )
     #     browser = p.chromium.launch(headless=False,  args=[
     # '--no-sandbox',  # Avoid sandboxing in headless mode
     # '--enable-accelerated-video-decode',  # Enable video decoding for h264
@@ -174,12 +177,13 @@ def perform_check():
             "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
             ]
 
-        # headers = {
-        #     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-        #     "Accept-Language": "en-US,en;q=0.9",
-        #     "Accept-Encoding": "gzip, deflate, br",
-        #     "Cookie": "cookie_consent=true",  # Example of a cookie consent header
-        #     }
+        headers = {
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Connection": "keep-alive",
+            "Cookie": "cookie_consent=true",  # Example of a cookie consent header
+            }
         
         x = random.randint(50, 500)  # Random X coordinate between 50 and 500
         y = random.randint(50, 500)  # Random Y coordinate between 50 and 500
@@ -197,22 +201,23 @@ def perform_check():
         # ''')
 
 
-        # page.evaluate("""
-        # Object.defineProperty(navigator, 'webdriver', {
-        # get: () => undefined,
-        # });
-        # """)
+        page.evaluate("""
+        Object.defineProperty(navigator, 'webdriver', {
+        get: () => undefined,
+        });
+        """)
 
         
-        # page.goto("https://bot.sannysoft.com/")  # Bot detection test site
+        page.goto("https://bot.sannysoft.com/",timeout=170000)  # Bot detection test site
+        page.wait_for_load_state('load')
         print("Performing Stealthcheck tests to detect bot activity before scrapping")
 
         # Save screenshot for validation
-        # page.screenshot(path="stealth_test.png")
+        page.screenshot(path="stealth_test.png")
 
-        # page.goto("https://www.browserscan.net/bot-detection")
-        # page.screenshot(path="stealth_test2.png")
-
+        page.goto("https://www.browserscan.net/bot-detection")
+        page.screenshot(path="stealth_test2.png",timeout=170000)
+        
 
         for regs in Regs:
 
@@ -221,22 +226,22 @@ def perform_check():
             # Get the IP address (this will show the proxy IP being used)
 
             page.set_extra_http_headers({"User-Agent": user_agent})
-            # page.set_extra_http_headers(headers)
-            time.sleep(random.uniform(1, 3))
-            page.goto(f"https://www.radarbox.com/data/flights/{regs}")
-            # page.wait_for_load_state('load')
+            page.set_extra_http_headers(headers)
+            # time.sleep(random.uniform(1, 3))
+            page.goto(f"https://www.airnavradar.com/data/flights/{regs}",timeout=2100000)
+            page.wait_for_load_state('load')
             page.set_viewport_size({"width": width, "height": height})
 
-            # page.mouse.move(x, y)  # Move mouse to random coordinates
+            page.mouse.move(x, y)  # Move mouse to random coordinates
             time.sleep(random.uniform(0.5, 1.5))  # Random human-like pause between 0.5 and 1.5 seconds
-            # page.mouse.click(x, y)  # Click at random coordinates
+            page.mouse.click(x, y)  # Click at random coordinates
 
             # time.sleep(2)
 
             # page.on("dialog", lambda dialog: dialog.accept())
             # time.sleep(1)
-            # scroll_amount = random.randint(200, 800)  # Random scroll distance between 200px and 800px
-            # scroll_direction = random.choice([1, -1])  # Randomize scroll direction (1 for down, -1 for up)
+            scroll_amount = random.randint(200, 800)  # Random scroll distance between 200px and 800px
+            scroll_direction = random.choice([1, -1])  # Randomize scroll direction (1 for down, -1 for up)
             time.sleep(random.uniform(1, 3))
             
             try:
@@ -246,14 +251,14 @@ def perform_check():
                 target_lon_str = page.locator('div#title:has-text("Longitude")').locator(
                     'xpath=following-sibling::div[@id="value"]').text_content().strip()
 
-                # time.sleep(random.uniform(1, 3))
+                time.sleep(random.uniform(1, 3))
 
-                # scroll_amount = random.randint(200, 900)  # Random scroll distance between 200px and 800px
-                # scroll_direction = random.choice([1, -1])
+                scroll_amount = random.randint(200, 900)  # Random scroll distance between 200px and 800px
+                scroll_direction = random.choice([1, -1])
                 
 
-                # page.mouse.wheel(0, scroll_amount * scroll_direction)  # Scroll by a random amount in the chosen direction
-                # time.sleep(random.uniform(2, 4))  # Random delay between actions (2 to 4 seconds)
+                page.mouse.wheel(0, scroll_amount * scroll_direction)  # Scroll by a random amount in the chosen direction
+                time.sleep(random.uniform(2, 4))  # Random delay between actions (2 to 4 seconds)
 
                 # Parse latitude/longitude
                 target_lat = float(target_lat_str)
@@ -314,7 +319,10 @@ def run_periodic_task():
             print("Code executed. Sleeping for 15min")
         except Exception as e:
             task_status["status"] = "Error"
+
             task_status["result"] = str(e)
+        if "ERR" or "Timeout" in task_status["result"]:
+            perform_check()
 
         # Sleep for 15 minutes (900 seconds) before running again
 
@@ -330,23 +338,12 @@ def start_task():
 if task_status["status"] == "Not Started":
         start_task()  # Start the task if not already running
 
-
-
-
 def index(request):
 
     city_lat = 22.310696
     city_lon = 73.192635  
     target_lat = ""
     target_lon = "" 
-
-
     
-
     # return render(request, "index.html")
     return render(request, "index.html", {'task_status': task_status})
-
-
-
-
-
