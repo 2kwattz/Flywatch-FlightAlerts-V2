@@ -37,8 +37,8 @@ height = random.choice([720, 800, 1080, 900, 640])
 
 
 
-account_sid = 'AC744b18c2967c0b094fd4fa564684b7a3'
-auth_token = 'fe1ec4e3491039056ad6779b04a2de2c'
+account_sid = ''
+auth_token = ''
 
 client = Client(account_sid, auth_token)
 task_status = {"status": "Not Started", "result": None}
