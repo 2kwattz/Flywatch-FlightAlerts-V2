@@ -1,8 +1,6 @@
-# flywatch/routing.py
-
-from django.urls import path
-from flywatch.consumers import WebSocketConsumer
+from django.urls import re_path
+from flywatch.consumers import FlywatchConsumer
 
 websocket_urlpatterns = [
-    path('ws/socket/', WebSocketConsumer.as_asgi()),  # WebSocket endpoint
+    re_path(r'ws/flywatch/$', FlywatchConsumer.as_asgi()),  # WebSocket endpoint
 ]

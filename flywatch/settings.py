@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import logging
+import io
+import sys
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,7 +28,9 @@ SECRET_KEY = 'django-insecure-$&7m179b)=j4@b=tr34$#+qctvaqko)(ocrv5zq**20^$q6(9z
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['192.168.0.197', '127.0.0.1', 'localhost','192.168.0.196','150.107.210.11','192.168.31.38','192.168.56.1']
+
 
 
 # Application definition
@@ -38,14 +43,36 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'channels',
- 
+    'django.contrib.sites',           # Required for Allauth
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'dj_rest_auth',
+    'dj_rest_auth.registration',
+    'rest_framework',
+    'rest_framework.authtoken',
+
     ]
 
+SITE_ID = 1
+
+# CHANNEL_LAYERS = {
+#     'default': {
+#         'BACKEND': 'channels.layers.InMemoryChannelLayer',
+#     },
+# }
+
+
+# Channel Layers Configuration (for WebSocket and Async Data Sharing)
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',
-    },
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',  # Use Redis for production
+    }
 }
+
+# WebSocket Protocol Setup
+ASGI_APPLICATION = 'flywatch.asgi.application'
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -55,7 +82,19 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
+
 ]
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+    
+
+]
+
+
+MIDDLEWARE += ['django.middleware.http.ConditionalGetMiddleware']
 
 ROOT_URLCONF = 'flywatch.urls'
 
@@ -75,7 +114,34 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'flywatch.wsgi.application'
+
+log_buffer = io.StringIO()
+PRINT_STREAM = io.StringIO()
+sys.stdout = PRINT_STREAM
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'memory': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'stream': log_buffer,
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['memory'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
+
+EMAIL_BACKEND = 'django.core.mail.backends.dummy.EmailBackend'
+ACCOUNT_EMAIL_VERIFICATION = 'none'  # Disable email verification
+ACCOUNT_EMAIL_REQUIRED = False  # Make email not required
 
 
 # Database
@@ -124,8 +190,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-ASGI_APPLICATION = 'flywatch.asgi.application'
-
 
 
 # Static files (CSS, JavaScript, Images)
@@ -138,7 +202,33 @@ STATICFILES_DIRS = [
     "/var/www/static/",
 ]
 
+
+INSTALLED_APPS += ['corsheaders']
+
+MIDDLEWARE.insert(0, 'corsheaders.middleware.CorsMiddleware')
+
+CORS_ALLOW_ALL_ORIGINS = True  # For development only; restrict this in production
+
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+ACCOUNT_EMAIL_REQUIRED = False
+ACCOUNT_USERNAME_REQUIRED = True
+ACCOUNT_AUTHENTICATION_METHOD = 'username'
+ACCOUNT_EMAIL_VERIFICATION = 'optional'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
+
+# Redirect after login or registration
+LOGIN_REDIRECT_URL = '/accounts/profile/'

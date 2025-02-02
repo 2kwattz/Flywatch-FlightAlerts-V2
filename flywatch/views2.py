@@ -36,7 +36,7 @@ def haversine(lat1, lon1, lat2, lon2):
     distance = R * c
     return distance
 
-def is_within_radius(lat1, lon1, lat2, lon2, radius=100):
+def is_within_radius(lat1, lon1, lat2, lon2, radius=300):
     """
     Check if the given latitude and longitude (lat2, lon2) are within
     the specified radius (default 100 miles) of the reference point (lat1, lon1).
@@ -58,13 +58,6 @@ def index(request):
 
     return render(request, "index.html")
 
-
-def trigger_check(request):
-    perform_check()
-    return HttpResponse("Check script executed successfully!")
-
-
-
 def perform_check():
     city_lat = 22.310696
     city_lon = 73.192635
@@ -75,10 +68,14 @@ def perform_check():
       
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=False, timeout=60000)
-        page = browser.new_page()
+
+        user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        context = browser.new_context(user_agent=user_agent)
+        page = context.new_page()
+        # page = browser.new_page()
 
         for regs in C17Regs:
-            page.goto(f"https://www.radarbox.com/data/flights/{regs}")
+            page.goto(f"https://www.airnavradar.com/data/flights/{regs}")
             page.wait_for_load_state('load')
             time.sleep(2)
 
@@ -102,6 +99,18 @@ def perform_check():
                     )
                     client.calls.create(
                         url="http://demo.twilio.com/docs/voice.xml",
+                        to="+916354248126",
+                        from_="+17756187371",
+                        twiml=str(response)
+                    )
+
+                    # Waiting 10 seconds before making second call
+
+                    time.sleep(8)
+
+                    print("Calling Second Number")
+                    client.calls.create(
+                        url="http://demo.twilio.com/docs/voice.xml",
                         to="+919909471247",
                         from_="+17756187371",
                         twiml=str(response)
@@ -116,3 +125,4 @@ def perform_check():
 
 
 
+perform_check()
